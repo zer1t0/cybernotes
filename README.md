@@ -3,25 +3,8 @@
 This is a place to share my notes on different topics mainly related to 
 cybersecurity.
 
+You can take whatever you want from here, but reference is appreciated.
 
-## Getting Super Powers
+Warning: Even if I try, I cannot guarantee that contents are correct. I made
+mistakes and technologies change, so be sure to verify the information.
 
-Becoming a super hero is a fairly straight forward process:
-
-```
-$ give me super-powers
-```
-
-{% hint style="info" %}
-&#x20;Super-powers are granted randomly so please submit an issue if you're not happy with yours.
-{% endhint %}
-
-> aslkfjslkd
-> sdlfksjdlkf
-
-Once you're strong enough, save the world:
-
-```bash
-# Ain't no code for that yet, sorry
-echo 'You got to trust me on this, I saved the world'
-```
