@@ -230,6 +230,23 @@ ntdll!NtQuerySystemTime:
 As you may notice, it shows parts of another function `RtlQuerySystemTime`
 because `NtQuerySystemTime` just jumps directly into it.
 
+### Show calls of a function
+
+Sometimes in order to understand relation between functions, can be useful to
+only display the calls instructions instead of all of the disassemble. You can
+do this with the `/c` option of the `uf` command. Here is an example of 
+`LoadLibraryW` calls:
+
+```
+0:000> uf /c KERNELBASE!LoadLibraryW
+KERNELBASE!LoadLibraryW (76281930)
+  KERNELBASE!LoadLibraryW+0xc (7628193c):
+    call to KERNELBASE!LoadLibraryExW (762519a0)
+```
+
+From this command you can deduce that `LoadLibraryW` is just a wrapper around
+`LoadLibraryExW`.
+
 ## Breakpoints
 
 The commands started by *b* are related to breakpoints.
@@ -271,12 +288,13 @@ address. Then, the second command derreferences the return address to read the
 instruction. 
 
 
-## List loaded libraries
+## Modules
 
-The
+A module is a library or the main exe of a process.
+
+You can list the loaded modules with the
 [lm](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/lm--list-loaded-modules-)
-(list modules) command allows to list the loaded libraries. It also indicates if
-the library symbols were already loaded.
+(list modules) command. It also indicates if the library symbols were already loaded.
 
 ```
 0:000> lm
@@ -289,6 +307,28 @@ start             end                 module name
 00007ffb`cd210000 00007ffb`cd2cd000   KERNEL32   (pdb symbols)          C:\ProgramData\Dbg\sym\kernel32.pdb\B07C97792B439ABC0DF83499536C7AE51\kernel32.pdb
 00007ffb`cdf50000 00007ffb`ce148000   ntdll      (pdb symbols)          C:\ProgramData\Dbg\sym\ntdll.pdb\1669C503FDE3540E0A2FBE91C81204361\ntdll.pdb
 ```
+
+Here you can see that the `HelloWorld` program loads the modules `ucrtbased`,
+`VCRUNTIME140D`, etc. Note that some modules/libraries can be loaded lazily when
+the process is running (by using `LoadLibrary` or similar), so may not all the
+modules that the process are listed when the process starts.
+
+### Discover to which module a symbol belongs
+
+If you want to know to which module an specific symbol belongs, a trick you can
+use is to invoke the
+[!lmi](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-lmi)
+command. Here is an example with the `LoadLibraryA` function:
+
+```
+0:000> !lmi LoadLibraryA
+Loaded Module Info: [loadlibrarya] 
+         Module: KERNELBASE
+   Base Address: 76140000
+....truncated....
+```
+You can see that the `LoadLibraryA` function belongs to the `KERNELBASE` module.
+
 
 ## Resources
 
