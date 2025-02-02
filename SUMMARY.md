@@ -8,4 +8,5 @@
 ## Reversing
 
 * [PE](reversing/pe.md)
+* [Radare2](reversing/radare2.md)
 * [WinDbg](reversing/windbg.md)
