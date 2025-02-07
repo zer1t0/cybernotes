@@ -231,7 +231,7 @@ to obtain a pointer to the beginning of each entry).
 
 Here is the command (with some additions to extract the module name):
 ```c
-dx Debugger.Utility.Collections.FromListEntry(((ntdll!_PEB*)@$peb)->Ldr->InLoadOrderModuleList, "ntdll!_LDR_DATA_TABLE_ENTRY", "InLoadOrderLinks").Select(e => (e.BaseDllName.Buffer).ToDisplayString("sub"))
+0:000> dx Debugger.Utility.Collections.FromListEntry(((ntdll!_PEB*)@$peb)->Ldr->InLoadOrderModuleList, "ntdll!_LDR_DATA_TABLE_ENTRY", "InLoadOrderLinks").Select(e => (e.BaseDllName.Buffer).ToDisplayString("sub"))
 Debugger.Utility.Collections.FromListEntry(((ntdll!_PEB*)@$peb)->Ldr->InLoadOrderModuleList, "ntdll!_LDR_DATA_TABLE_ENTRY", "InLoadOrderLinks").Select(e => (e.BaseDllName.Buffer).ToDisplayString("sub"))
     [0x0]            : notepad.exe
     [0x1]            : ntdll.dll
