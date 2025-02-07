@@ -164,6 +164,97 @@ In order to set a registry value, the `r` command can be used (again):
 0:000> r rax=1
 ```
 
+## Data
+
+
+### Traversing Windows List Entries
+
+> Based on [WinDbg — the Fun Way: Part 1 - Arrays and Lists](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-1-2e4978791f9b#814d)
+
+Is commom for Windows to use lists to link structures with the type
+`LIST_ENTRY`, which is defined in `winnt.h`:
+
+```c
+typedef struct _LIST_ENTRY {
+    struct _LIST_ENTRY *Flink;
+    struct _LIST_ENTRY *Blink;
+} LIST_ENTRY,*PLIST_ENTRY,*RESTRICTED_POINTER PRLIST_ENTRY;
+```
+
+And we can traverse the lists with the
+`Debugger.Utility.Collections.FromListEntry` that can be used with the [dx
+command](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/dx--display-visualizer-variables-). Let's
+see a practical example.
+
+As example of a list we have the modules loaded by the process, which are linked
+by the PEB. Each of this modules is described by a `LDR_DATA_TABLE_ENTRY` which
+has the following definition:
+
+```c
+typedef struct _LDR_DATA_TABLE_ENTRY {
+    PVOID Reserved1[2];
+    LIST_ENTRY InMemoryOrderLinks;
+    PVOID Reserved2[2];
+    PVOID DllBase;
+    PVOID Reserved3[2];
+    UNICODE_STRING FullDllName;
+    BYTE Reserved4[8];
+    PVOID Reserved5[3];
+    __C89_NAMELESS union {
+      ULONG CheckSum;
+      PVOID Reserved6;
+    };
+    ULONG TimeDateStamp;
+} LDR_DATA_TABLE_ENTRY,*PLDR_DATA_TABLE_ENTRY;
+```
+
+As we can guess, the modules are linked by the `InMemoryOrderLinks` field. This
+is important to know since it will allow us to resolve the correct address of
+the structure from the list.
+
+So, in order to list the loaded modules, we can use the following command:
+```
+dx Debugger.Utility.Collections.FromListEntry(((ntdll!_PEB*)@$peb)->Ldr->InLoadOrderModuleList, "ntdll!_LDR_DATA_TABLE_ENTRY", "InLoadOrderLinks")
+```
+
+Let's explain it by parts. First, we have the `dx` command that interprets the
+[LINQ
+expression](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/using-linq-with-the-debugger-objects). Then
+the `Debugger.Utility.Collections.FromListEntry` will traverse the list. We
+indicate to `FromListEntry` that the list starts in
+`((ntdll!_PEB*)@$peb)->Ldr->InLoadOrderModuleList`, being `@$peb` the address of
+the Process Environment Block (PEB) and `Ldr->InLoadOrderModuleList` the field
+that has the list head.  Then each list entry is casted to
+`ntdll!_LDR_DATA_TABLE_ENTRY` type, which has the list links 
+in the `InLoadOrderLinks` field (so it is necessary substract the field offset
+to obtain a pointer to the beginning of each entry).
+
+Here is the command (with some additions to extract the module name):
+```c
+dx Debugger.Utility.Collections.FromListEntry(((ntdll!_PEB*)@$peb)->Ldr->InLoadOrderModuleList, "ntdll!_LDR_DATA_TABLE_ENTRY", "InLoadOrderLinks").Select(e => (e.BaseDllName.Buffer).ToDisplayString("sub"))
+Debugger.Utility.Collections.FromListEntry(((ntdll!_PEB*)@$peb)->Ldr->InLoadOrderModuleList, "ntdll!_LDR_DATA_TABLE_ENTRY", "InLoadOrderLinks").Select(e => (e.BaseDllName.Buffer).ToDisplayString("sub"))
+    [0x0]            : notepad.exe
+    [0x1]            : ntdll.dll
+    [0x2]            : KERNEL32.DLL
+    [0x3]            : KERNELBASE.dll
+    [0x4]            : GDI32.dll
+    [0x5]            : win32u.dll
+    [0x6]            : gdi32full.dll
+    [0x7]            : msvcp_win.dll
+    [0x8]            : ucrtbase.dll
+    [0x9]            : USER32.dll
+    [0xa]            : combase.dll
+    [0xb]            : RPCRT4.dll
+    [0xc]            : shcore.dll
+    [0xd]            : msvcrt.dll
+    [0xe]            : COMCTL32.dll
+```
+
+And we got the modules. The `Select(e =>
+(e.BaseDllName.Buffer).ToDisplayString("sub"))` expression indicates that for
+each entry `e` it will take the field `BaseDllName.Buffer` that contains a
+unicode string (`wchar_t*`) that we display with `ToDisplayString("sub")`.
+
 ## Disassemble
 
 In order to dissasemble functions and instructions, you have some commands that
@@ -333,7 +424,12 @@ You can see that the `LoadLibraryA` function belongs to the `KERNELBASE` module.
 ## Resources
 
 - [WinDbg docs](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/)
-- [WinDbg - the Fun Way: Part 1](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-1-2e4978791f9b)
+- 21/05/2020 [WinDbg - the Fun Way: Part
+  1](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-1-2e4978791f9b)
+  by Yarden Shafir
+- 21/05/2020 [WinDbg — the Fun Way: Part
+  2](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-2-7a904cba5435)
+  by Yarden Shafir
 - [Fix Your (Offline) Symbols](https://www.osr.com/nt-insider/2015-issue1/fix-offline-symbols/)
 - [Symbols for Windows Debugging](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbols)
 - [Learn WinDbg](http://www.windbg.xyz/)
