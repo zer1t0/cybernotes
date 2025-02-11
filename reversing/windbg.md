@@ -26,9 +26,7 @@ store them into `C:\symbols`. You may need to apply `.reload` after changing
 symbols path.
 
 This being said, the long answer starts by checking the current symbols path,
-which you can with the
-[.sympath](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-sympath--set-symbol-path-)
-meta command without arguments:
+which you can with the [.sympath](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-sympath--set-symbol-path-) meta command without arguments:
 ```
 0:000> .sympath 
 Symbol search path is: srv*
@@ -43,7 +41,7 @@ In this case the symbol path is
 indicates that that symbols are cached in the default cache directory of the
 system, and `SRV*https://msdl.microsoft.com/download/symbols` indicates that
 those symbols that are not in the cache will be retrieved from the Microsoft
-public symbol server (https://msdl.microsoft.com/download/symbols ). 
+public symbol server (<https://msdl.microsoft.com/download/symbols>). 
 
 > You can find more information about the symbols path syntax in [Symbol path
 > for Windows debuggers]( https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbol-path).
@@ -112,6 +110,18 @@ Finally you have the symbols in your isolated machine. In WinDbg remember to set
 .sympath C:\symbols
 ```
 
+### Open file where a symbol resides
+
+You can just use the [.open](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-open--open-source-file-) command with the `-a` parameter:
+```
+.open -a <address>
+```
+
+Example:
+```
+.open -a HelloWorld!main
+```
+
 ## About Commands
 
 In these notes you will find many different commands of WinDbg explained. The
@@ -119,7 +129,9 @@ intention focused on explaining common situations with WinDbg, so the commands
 are not explained exhaustively, but you can refer to the
 [official documentation for WinDbg
 commands](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/debugger-commands). 
+
 Moreover, just let you know that there different command types:
+
 - **Regular Commands**: Commands that affect the debuggee (program being debugged).
 - **Meta commands**: Also called *dot commands* because they always start with a
   dot, like `.sympath` or `.reload`. They are related to configuration of the debugger
@@ -165,6 +177,23 @@ In order to set a registry value, the `r` command can be used (again):
 ```
 
 ## Data
+
+### Derreference pointers
+
+You can derreference pointers with the `poi` function. It works like the **ptr*
+operator in C. Here is an example:
+
+```
+0:000> dp rsp L1
+000000c6`240ff718  00007ff6`2caf2539
+0:000> u poi(rsp) L1
+HelloWorld!invoke_main+0x39 [D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl @ 79]:
+00007ff6`2caf2539 4883c448        add     rsp,48h
+```
+
+The first command shows the first value in the stack, which is the return
+address. Then, the second command derreferences the return address to read the
+instruction. 
 
 
 ### Traversing Windows List Entries
@@ -361,24 +390,6 @@ Once set, breakpoints can be listed with
      1 e Disable Clear  00007ff6`2caf1920  [C:\Users\user\source\repos\HelloWorld\HelloWorld\HelloWorld.c @ 25]     0001 (0001)  0:**** HelloWorld!main
 ```
 
-## Derreference pointers
-
-You can derreference pointers with the `poi` function. It works like the **ptr*
-operator in C. Here is an example:
-
-```
-0:000> dp rsp L1
-000000c6`240ff718  00007ff6`2caf2539
-0:000> u poi(rsp) L1
-HelloWorld!invoke_main+0x39 [D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl @ 79]:
-00007ff6`2caf2539 4883c448        add     rsp,48h
-```
-
-The first command shows the first value in the stack, which is the return
-address. Then, the second command derreferences the return address to read the
-instruction. 
-
-
 ## Modules
 
 A module is a library or the main exe of a process.
@@ -419,7 +430,6 @@ Loaded Module Info: [loadlibrarya]
 ....truncated....
 ```
 You can see that the `LoadLibraryA` function belongs to the `KERNELBASE` module.
-
 
 ## Resources
 
