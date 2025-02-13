@@ -431,15 +431,31 @@ Loaded Module Info: [loadlibrarya]
 ```
 You can see that the `LoadLibraryA` function belongs to the `KERNELBASE` module.
 
+## Scripting
+
+WinDbg allows to extend its capabilities through scripting.
+
+### Javascript Scripting
+One of the most used script engines is Javascript, that comes by default with
+the latest WinDbg versions.
+
+- [JavaScript Debugger Scripting](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/javascript-debugger-scripting)
+- 2017/12/01 [Debugger data model, Javascript & x64 exception handling](https://doar-e.github.io/blog/2017/12/01/debugger-data-model/) by
+  Axel "0vercl0k" Souchet
+- [WinDbg Javascript reference](https://github.com/hugsy/defcon_27_windbg_workshop/blob/main/windbg_cheatsheet.md#windbg-javascript-reference)
+
+Some samples of Windbg scripts:
+- [windbg-scripts](https://github.com/0vercl0k/windbg-scripts) by 0vercl0k
+- [WinDbg-Samples](https://github.com/microsoft/WinDbg-Samples) by Microsoft
+- [windbg_js_scripts](https://github.com/hugsy/windbg_js_scripts) by hugsy
+
 ## Resources
 
 - [WinDbg docs](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/)
-- 21/05/2020 [WinDbg - the Fun Way: Part
-  1](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-1-2e4978791f9b)
-  by Yarden Shafir
-- 21/05/2020 [WinDbg — the Fun Way: Part
-  2](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-2-7a904cba5435)
-  by Yarden Shafir
-- [Fix Your (Offline) Symbols](https://www.osr.com/nt-insider/2015-issue1/fix-offline-symbols/)
+- 2020/05/21 [WinDbg - the Fun Way: Part 1](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-1-2e4978791f9b) by Yarden Shafir
+- 2020/05/21 [WinDbg — the Fun Way: Part 2](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-2-7a904cba5435) by Yarden Shafir
+- 2015 [Fix Your (Offline) Symbols](https://www.osr.com/nt-insider/2015-issue1/fix-offline-symbols/) by David Boyce
 - [Symbols for Windows Debugging](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbols)
 - [Learn WinDbg](http://www.windbg.xyz/)
+- 2019 ["Modern Debugging with WinDbg Preview" DEFCON 27 workshop](https://github.com/hugsy/defcon_27_windbg_workshop) by hugsy
+  & Overcl0k
