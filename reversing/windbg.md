@@ -433,10 +433,59 @@ You can see that the `LoadLibraryA` function belongs to the `KERNELBASE` module.
 
 ## Scripting
 
-WinDbg allows to extend its capabilities through scripting.
+
+### Command Script files
+
+The most basic way of scripting in WinDbg is to run files with gdb
+commands. This can be accomplished with the [$<, $><, $$<, $$><, $$>a<](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-----------------------a---run-script-file-)
+command family, make sure to check the docs to understand the differences
+between each command.
+
+Imagine a file named hello.txt with the following contents:
+```
+.echo Hello World
+.echo Bye World
+```
+
+You can execute its commands with:
+```
+$$<"C:\hello.txt"
+```
+
+In this case each command will be executed separately:
+```
+0:000> $$<"C:\hello.txt"
+0:000> .echo Hello World
+Hello World
+0:000> .echo Bye World
+Bye World
+```
+
+If you want to execute all you can use `$$><:
+```
+0:000> $$><"C:\hello.txt"
+Hello World
+Bye World
+```
+ 
+### Script Providers
+
+Additionally to the common script files, WinDbg allows to register script
+providers that allow to create WinDbg in other languages, which is usually more
+powerful. 
+
+
+We can list the available script providers with the [.scriptproviders](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-scriptproviders--list-script-providers-)
+command:
+```
+0:000> .scriptproviders
+Available Script Providers:
+    NatVis (extension '.NatVis')
+    JavaScript (extension '.js')
+```
 
 ### Javascript Scripting
-One of the most used script engines is Javascript, that comes by default with
+One of the most used script engines is Javascript, that comes by default in
 the latest WinDbg versions.
 
 - [JavaScript Debugger Scripting](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/javascript-debugger-scripting)
@@ -448,10 +497,12 @@ Some samples of Windbg scripts:
 - [windbg-scripts](https://github.com/0vercl0k/windbg-scripts) by 0vercl0k
 - [WinDbg-Samples](https://github.com/microsoft/WinDbg-Samples) by Microsoft
 - [windbg_js_scripts](https://github.com/hugsy/windbg_js_scripts) by hugsy
+- [WinDbg_Scripts](https://github.com/yardenshafir/WinDbg_Scripts) by yardenshafir
 
 ## Resources
 
 - [WinDbg docs](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/)
+- [@windbgtips](https://nitter.net/windbgtips)
 - 2020/05/21 [WinDbg - the Fun Way: Part 1](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-1-2e4978791f9b) by Yarden Shafir
 - 2020/05/21 [WinDbg — the Fun Way: Part 2](https://medium.com/@yardenshafir2/windbg-the-fun-way-part-2-7a904cba5435) by Yarden Shafir
 - 2015 [Fix Your (Offline) Symbols](https://www.osr.com/nt-insider/2015-issue1/fix-offline-symbols/) by David Boyce
