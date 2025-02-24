@@ -139,7 +139,9 @@ Moreover, just let you know that there different command types:
 - **Extension commands**: Commands provided by extensions. These commands start
   with "!".
   
-## Registers
+## Data
+
+### Registers
 
 You can view register values with the *Registers View* or the [r
 command](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/r--registers-). Here
@@ -176,7 +178,38 @@ In order to set a registry value, the `r` command can be used (again):
 0:000> r rax=1
 ```
 
-## Data
+### Pseudo-registers
+
+- [Pseudo-Register Syntax](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/pseudo-register-syntax)
+
+Pseudo-registers are like variables that WinDbg supports, there are many
+predefined and some to allow the user to store its own (integer) values. Every
+pseudo-register starts with the symbol `$`. An example of predefined
+pseudo-register is `$peb` (that indicates the PEB address) or `$ra` (indicates
+the return address). A complete list of predefined/automatic pseudo-registers
+can be found in [Automatic Pseudo-Registers](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/pseudo-register-syntax#automatic-pseudo-registers).
+
+```
+0:000> ? $ra
+Evaluate expression: 140735759137834 = 00007fff`98ee3c2a
+```
+
+### The @ symbol
+
+When using a register or pseudo-register you can prepend the `@`
+symbol. This indicates the debugger that the next token is a register or
+pseudo-register, and avois searching through the whole list of symbols
+available.
+
+The following example returns the exact same value, but if you tried to execute
+it, you will notice that using `@$ra` will increase the speed of response:
+```
+0:000> ? $ra
+Evaluate expression: 140735759137834 = 00007fff`98ee3c2a
+0:000> ? @$ra
+Evaluate expression: 140735759137834 = 00007fff`98ee3c2a
+```
+
 
 ### Derreference pointers
 
@@ -284,6 +317,44 @@ And we got the modules. The `Select(e =>
 each entry `e` it will take the field `BaseDllName.Buffer` that contains a
 unicode string (`wchar_t*`) that we display with `ToDisplayString("sub")`.
 
+### Listing memory maps
+
+We can get a list of memory regions with the [`!address` command](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-address).
+
+Here is an example:
+```
+0:000> !address
+
+                                     
+Mapping file section regions...
+Mapping module regions...
+Mapping PEB regions...
+Mapping TEB and stack regions...
+Mapping heap regions...
+Mapping page heap regions...
+Mapping other regions...
+Mapping stack trace database regions...
+Mapping activation context regions...
+
+        BaseAddress      EndAddress+1        RegionSize     Type       State                 Protect             Usage
+--------------------------------------------------------------------------------------------------------------------------
++        0`00000000        0`7ffe0000        0`7ffe0000             MEM_FREE    PAGE_NOACCESS                      Free       
++        0`7ffe0000        0`7ffe1000        0`00001000 MEM_PRIVATE MEM_COMMIT  PAGE_READONLY                      Other      [User Shared Data]
++        0`7ffe1000        0`7ffec000        0`0000b000             MEM_FREE    PAGE_NOACCESS                      Free       
++        0`7ffec000        0`7ffed000        0`00001000 MEM_PRIVATE MEM_COMMIT  PAGE_READONLY                      <unknown>  [..........Q82i..]
++        0`7ffed000       6c`6d200000       6b`ed213000             MEM_FREE    PAGE_NOACCESS                      Free       
++       6c`6d200000       6c`6d3b8000        0`001b8000 MEM_PRIVATE MEM_RESERVE                                    <unknown>  
+        6c`6d3b8000       6c`6d3b9000        0`00001000 MEM_PRIVATE MEM_COMMIT  PAGE_READWRITE                     PEB        [1f04]
+        6c`6d3b9000       6c`6d3bd000        0`00004000 MEM_PRIVATE MEM_COMMIT  PAGE_READWRITE                     TEB        [~0; 1f04.1efc]
+...stripped...
++     7ff9`30860000     7ff9`30861000        0`00001000 MEM_IMAGE   MEM_COMMIT  PAGE_READONLY                      Image      [KERNELBASE; "C:\Windows\System32\KERNELBASE.dll"]
+      7ff9`30861000     7ff9`3099b000        0`0013a000 MEM_IMAGE   MEM_COMMIT  PAGE_EXECUTE_READ                  Image      [KERNELBASE; "C:\Windows\System32\KERNELBASE.dll"]
+      7ff9`3099b000     7ff9`30b1e000        0`00183000 MEM_IMAGE   MEM_COMMIT  PAGE_READONLY                      Image      [KERNELBASE; "C:\Windows\System32\KERNELBASE.dll"]
+      7ff9`30b1e000     7ff9`30b23000        0`00005000 MEM_IMAGE   MEM_COMMIT  PAGE_READWRITE                     Image      [KERNELBASE; "C:\Windows\System32\KERNELBASE.dll"]
+      7ff9`30b23000     7ff9`30b5f000        0`0003c000 MEM_IMAGE   MEM_COMMIT  PAGE_READONLY                      Image      [KERNELBASE; "C:\Windows\System32\KERNELBASE.dll"]
+...stripped...
+```
+
 ## Disassemble
 
 In order to dissasemble functions and instructions, you have some commands that
@@ -367,14 +438,56 @@ KERNELBASE!LoadLibraryW (76281930)
 From this command you can deduce that `LoadLibraryW` is just a wrapper around
 `LoadLibraryExW`.
 
-## Breakpoints
+## Execution
+
+### Debugger mode
+
+WinDbg debugger has two modes: [Source Mode](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugging-in-source-mode) and [Assembly Mode](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugging-in-assembly-mode). 
+
+The debugger behaves differently based on the mode it is working on. You should
+check the WinDbg docs for all the differences, but for example, in source mode,
+commands like [t](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/t--trace-) (Step In) or [p](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/p--step-) (Step Over) will execute a line of
+code, whereas in assembly mode those same commands will execute just an assembly
+instruction. It is important to be aware of the mode you are in order to
+identify how the debugger will behave.
+
+
+You can change the mode with the [l](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/l---l---set-source-options-) command. To set the Assembly Mode you
+can use `l-t`:
+```
+0:000> l-t
+Source options are 0:
+    None
+```
+
+And then to set Source Mode you can use `l+t`:
+```
+0:000> l+t
+Source options are 1:
+     1/t - Step/trace by source line
+```
+
+### Execution controls
+
+There are several commands that allows to control the execution of the debugged
+process.
+
+- [g](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/g--go-) (Go) : Continues until an event makes it stop, like a breakpoint, an
+  exception, or the end of the program.
+- [gu](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/gu--go-up-) (Go up/Step Out) : Continues until the current function returns.
+
+- [p](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/p--step-) (Ste**p**/Step Over): Executes a single instruction or line of code (depends
+  on the debugger mode), without entering functions.
+
+- [t](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/t--trace-) (Trace/Step In): Executes a single instruction or line of cod (depends
+  on the debugger mode) and enters into a function when called.
+
+### Breakpoints
 
 The commands started by *b* are related to breakpoints.
 
 The most simple action, setting a breakpoint on a memory address can be done
-with the 
-[bp](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/bp--bu--bm--set-breakpoint-)
-(BreakPoint) command:
+with the [bp](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/bp--bu--bm--set-breakpoint-) (BreakPoint) command:
 ```
 0:000> bp HelloWorld!main
 ```
@@ -431,13 +544,32 @@ Loaded Module Info: [loadlibrarya]
 ```
 You can see that the `LoadLibraryA` function belongs to the `KERNELBASE` module.
 
+### List all symbols of a module
+
+We can use the [`x` command](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/x--examine-symbols-) in combination with the help of a wildcard to
+list all the symbols that a module contains.
+
+For example, to list all available symbols in `ntdll`:
+```
+x ntdll!*
+```
+
+```
+0:000> x ntdll!*
+00007ffa`9f9b60d0 ntdll!RtlpHpVaMgrRangeCreate (void)
+00007ffa`9fa09dd0 ntdll!RtlFindLastBackwardRunClear (void)
+00007ffa`9f9f52b0 ntdll!EtwDeliverDataBlock (void)
+.....strip.....
+```
+
 ## Scripting
 
 
 ### Command Script files
 
 The most basic way of scripting in WinDbg is to run files with gdb
-commands. This can be accomplished with the [$<, $><, $$<, $$><, $$>a<](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-----------------------a---run-script-file-)
+commands. This can be accomplished with the [`$<`, `$><`, `$$<`, `$$><`,
+`$$>a<`](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-----------------------a---run-script-file-)
 command family, make sure to check the docs to understand the differences
 between each command.
 
@@ -468,12 +600,14 @@ Hello World
 Bye World
 ```
  
+Some samples of Windbg file scripts:
+- [WinDbg_Scripts](https://github.com/yardenshafir/WinDbg_Scripts) by yardenshafir
+ 
 ### Script Providers
 
 Additionally to the common script files, WinDbg allows to register script
 providers that allow to create WinDbg in other languages, which is usually more
 powerful. 
-
 
 We can list the available script providers with the [.scriptproviders](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-scriptproviders--list-script-providers-)
 command:
@@ -493,7 +627,7 @@ the latest WinDbg versions.
   Axel "0vercl0k" Souchet
 - [WinDbg Javascript reference](https://github.com/hugsy/defcon_27_windbg_workshop/blob/main/windbg_cheatsheet.md#windbg-javascript-reference)
 
-Some samples of Windbg scripts:
+Some samples of Windbg javascript scripts:
 - [windbg-scripts](https://github.com/0vercl0k/windbg-scripts) by 0vercl0k
 - [WinDbg-Samples](https://github.com/microsoft/WinDbg-Samples) by Microsoft
 - [windbg_js_scripts](https://github.com/hugsy/windbg_js_scripts) by hugsy
