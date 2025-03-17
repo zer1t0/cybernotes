@@ -210,6 +210,64 @@ Evaluate expression: 140735759137834 = 00007fff`98ee3c2a
 Evaluate expression: 140735759137834 = 00007fff`98ee3c2a
 ```
 
+### Search strings
+
+We can search string patterns with the [s](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/s--search-memory-) command. We will need
+to specify the pattern along with a memory range to search the
+string.
+
+Here is an example searching an ASCII string:
+```
+0:000> s -a 775e0000 L200000 "NtQuery"
+776f6144  4e 74 51 75 65 72 79 41-74 74 72 69 62 75 74 65  NtQueryAttribute
+776f615a  4e 74 51 75 65 72 79 41-75 78 69 6c 69 61 72 79  NtQueryAuxiliary
+776f617b  4e 74 51 75 65 72 79 42-6f 6f 74 45 6e 74 72 79  NtQueryBootEntry
+776f6191  4e 74 51 75 65 72 79 42-6f 6f 74 4f 70 74 69 6f  NtQueryBootOptio
+```
+
+And a example searching an Unicode string:
+```
+0:000> s -u 775e0000 L200000 "ntdll"
+775e8430  006e 0074 0064 006c 006c 002e 0064 006c  n.t.d.l.l...d.l.
+7770d2a8  006e 0074 0064 006c 006c 002e 0064 006c  n.t.d.l.l...d.l.
+7770d364  006e 0074 0064 006c 006c 002e 0064 006c  n.t.d.l.l...d.l.
+```
+
+Here is an example searching all ASCII strings with a minimum length
+of 30:
+```
+0:000> s -[l30]sa 775e0000 L200000
+775e5210  "HEAP: Free Heap block %p modifie"
+775e5230  "d at %p after it was freed"
+775e6418  " !"#$%&'()*+,-./0123456789:;<=>?"
+775e6438  "@abcdefghijklmnopqrstuvwxyz[\]^_"
+```
+
+Similar example as above but with Unicode strings with a minimum
+length of 30:
+```
+0:000> s -[l30]su 775e0000 L200000
+775e1ab4  "㹌睟㹠睟㺄睟㺨睟㻘睟㻸睟㼘睟㼴睟㽐睟㽨睟㾐睟㾰睟㿘睟㿸睟䀘睟䁀睟"
+775e1af4  "䁠睟䂀睟䂜睟堘睞䃈睟䃔睟䃤睟䃴睟䄈睟䄠睟䄸睟䅐睟䅤睟䅰睟䆌睟䆸睟"
+775e1b34  "䇜睟䇼睟䈌睟䈴睟䉔睟䉤睟䊄睟䊰睟䊼睟䋔睟䋤睟䋼睟䌠睟䌴睟䍌睟䍔睟"
+775e1b74  "䍤睟䎄睟䎘睟䎰睟䏈睟"
+775e4860  "\Registry\Machine\System\Current"
+775e48a0  "ControlSet\Control\MUI\UILanguag"
+```
+
+### Display string
+
+We can display an ascii string with [da](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/d--da--db--dc--dd--dd--df--dp--dq--du--dw--dw--dyb--dyd--display-memor) command:
+```
+0:000> da 0x776f6144
+776f6144  "NtQueryAttributesFile"
+```
+
+And a Unicode string with [du](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/d--da--db--dc--dd--dd--df--dp--dq--du--dw--dw--dyb--dyd--display-memor) command:
+```
+0:000> du 775e8430
+775e8430  "ntdll.dll"
+```
 
 ### Derreference pointers
 
@@ -503,6 +561,14 @@ Once set, breakpoints can be listed with
      1 e Disable Clear  00007ff6`2caf1920  [C:\Users\user\source\repos\HelloWorld\HelloWorld\HelloWorld.c @ 25]     0001 (0001)  0:**** HelloWorld!main
 ```
 
+### Time Travel Debugging
+
+Time Travel Debugging or TTD allows us to record a program execution
+and then inspect it in the debugger, going forward and backwards in
+the execution flow.
+
+- [Time Travel Debugging: Getting started with TTD](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/time-travel-debugging-overview#getting-started-with-ttd)
+
 ## Modules
 
 A module is a library or the main exe of a process.
@@ -644,3 +710,5 @@ Some samples of Windbg javascript scripts:
 - [Learn WinDbg](http://www.windbg.xyz/)
 - 2019 ["Modern Debugging with WinDbg Preview" DEFCON 27 workshop](https://github.com/hugsy/defcon_27_windbg_workshop) by hugsy
   & Overcl0k
+- [WinDBG quick start tutorial](https://codemachine.com/articles/windbg_quickstart.html) 
+- [WinDBG expression evaluation tutorial: An in-depth tutorial on the MASM and C++ expression evaluators in WinDBG.](https://codemachine.com/articles/windbg_expressions.html)

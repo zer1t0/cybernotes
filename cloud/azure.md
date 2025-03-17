@@ -78,7 +78,7 @@ You can find more information in [Azure Fundamental Concepts](https://learn.micr
 
 A tenant, as we have mentioned, is an Azure instance that is available for a
 customer that can be an individual or an organization (but we will usually in
-terms of organization when refering to a tenant management). 
+terms of organization when refering to a tenant management).
 
 Each tenant has always at least one domain associated with it, by default
 in the form of `<company>.onmicrosoft.com`. Other domains can be also associated
@@ -169,12 +169,13 @@ Command group 'account tenant' is experimental and under development. Reference 
 The term Azure authentication can be a little misleading since in
 reality Azure is just a part in the authentication process which is
 handled by the [Microsoft Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/) from which Entra ID is
-a part. 
+a part.
 
 This is a complex (and messy) topic since there are many components
 and protocols involved. However, a large part of the authentication is
 based on [OAuth-2.0-and Open ID Connect (OIDC) protocols](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols), so if
-you know the topic, it can a be easier.
+you know the topic, it can a be easier. I recommend to check the
+[OAuth2.0 section](../web/oauth2.0.md).
 
 ### Authentication components
 
@@ -183,46 +184,64 @@ authentication process, the user which wants to access and the
 service, which is Azure.
 
 However, Azure is not a single service, but a compound of many
-different services that manages different parts of it, like virtual
+different services that manages different resources, like virtual
 machines, storage blobs, etc. And since Azure is integrated with other
 Microsoft products, like those from Microsoft 365, an user can also
 access Teams, Outlook, OneDrive, Word, etc, from its Azure/company
 account, so we must also take those services into account.
 
-So now we have the user on one part, and many Microsoft services into
-the other. However, these services are not directly accessible, but
-are managed by applications that can query and modify them, so the
-user needs to access to these applications. An example of an
-application is [Microsoft Graph](https://learn.microsoft.com/en-us/graph/overview). It is important to know that an
-application does not can access only to one service, but many of them,
-and maybe only to specific resources, and on the other hand, a
-service can be accessed by many applications. For example, 
-[Microsoft Graph can access to several Microsoft services](https://learn.microsoft.com/en-us/graph/overview-major-services) like
-Entra ID, Outlook, etc. This means that there are several ways
-(applications) for an user to access to the same service, which can be
-confusing (and also opens ways to bypass certain resources access).
+So now we have the user on one part, and many Microsoft services with resources
+into the other. However, these services are not directly accessible, but
+are managed by applications that can query and modify their resources, so the
+user needs to access to those applications. As an example of service we can
+consider Teams, that holds resources like Teams groups or messages. And as an
+example of an application we have [Microsoft Graph](https://learn.microsoft.com/en-us/graph/overview), Teams API or
+[many others Microsoft applications](https://learn.microsoft.com/en-us/troubleshoot/entra/entra-id/governance/verify-first-party-apps-sign-in#application-ids-of-commonly-used-microsoft-applications). It is important to know that many
+applications cannot only access to one service, but several, and most only to
+specific service resources, defined by the application scope. For example,
+[Microsoft Graph can access to several Microsoft services](https://learn.microsoft.com/en-us/graph/overview-major-services) like Entra ID,
+Outlook, etc. On the other hand, a service/resource can be accessed by many
+applications. This means that there are several ways (applications) for an user
+to access to the same service, which can be confusing (and also opens ways to
+bypass certain resources access).
 
-On the other hand, in order to access to those applications (and
-therefore the services behind them) the user needs to use some kind of
-software, like a web browser, powershell, Outlook app, etc. This
-software is known as the client, and as we have seen, there are many
-of them, that can be granted different levels of access. So maybe an
-organization allows to access to user mails through the Outlook
-app, but not using Powershell.
+Here is a little schema (far from complete) as example of apps that can access
+to the same resources:
+```
+                                    .----
+                         .--------->| Intune devices
+                         |          '----
+                         |
+  .-----------------.    |          .----
+  | Microsoft Graph |----+--------->| Entra ID Users
+  '-----------------'    |  .------>'----
+                         |  |
+  .-----------.          '--|----->.-----
+  | Teams API |-------------'----->| Team meetings
+  '-----------'                    '-----
+```
+
+On the other side, we have the user, that in order to access to those
+applications (and therefore the services and resources behind them)
+the user needs to use some kind of software, like a web browser,
+Powershell, Outlook app, etc. This software is known as the client,
+and as we have seen, there are many of them, that can be granted
+different levels of access. So maybe an organization allows to access
+to user mails through the Outlook app, but not using Powershell.
 
 So now we have the user, the client (used software), the application
 and the services. Here is a little schema of the situation:
 ```
                                                 .-----
-                                           .--> | service 1 
+                                           .--> | service resource 1
                                            |    '-----
-										   |		
-  \O/    .--------.       .-------------.  |    .-----
-   | --->| client |------>| application | -|--> | service 2
-  / \    '--------'       '-------------'  |    '-----
+										   |
+  \O/    .--------.     .-------------.    |    .-----
+   | --->| client |---->| application | ---+--> | service resource 2
+  / \    '--------'     '-------------'    |    '-----
   user                                     |
                                            |    .----
-                                           '--> | service 3
+                                           '--> | service resource 3
                             				    '----
 ```
 
@@ -236,76 +255,78 @@ OAuth 2.0 schema, that would be something like the following:
  owner
 ```
 
-As you can see a few things have change. First the user it is named as
-**resource owner** since we can think that she wants to access to its
-own resources. I personally don't like the term cause many times a
-user wants to access to resources from other people, like consulting
-their email address, but still that is the term used in OAuth 2.0 and
-knowing its meaning will make us easier to read documentation. Second,
-the target application is named the **resource provider** because it
-provides access to the resources, usually through an API. And third we
-have eliminated the services since in OAuth 2.0 that part is left
+As you can see a few things have change:
+
+First the user it is named as **resource owner** since we can think that she
+wants to access to its own resources. I personally don't like the term resource
+owner in the Azure scenario because many times a user wants to access to
+resources from other people, like consulting their email address, but still that
+is the term used in OAuth 2.0 and knowing its meaning will make us easier to read
+documentation.
+
+Second, the target application is named the **resource provider** because it
+provides access to the resources, usually through an API.
+
+And third, we have eliminated the services since in OAuth 2.0 that part is left
 to the specific implementation, but in our case of Azure it is
-important to know that behind many applications there are the
-Microsoft services and we can access to them in many cases by using
+important to know that behind resource providers there are Azure/Microsoft
+services that expose resources and we can access to them in many cases by using
 different Microsoft resource providers/applications.
 
 And other thing that is important to note for the sake of clarity is
 that clients are also applications. So we can have applications that
-act as clients or as resource providers. For example the [Azure
-CLI](https://learn.microsoft.com/en-us/cli/azure/) is just a client and [Microsoft Graph](https://learn.microsoft.com/en-us/graph/overview) is just a resource
-provider, but others like the [Azure Portal](https://portal.azure.com) can act as both client
-or resource provider. This may sound counterintuitive but may think
-that an application just have access direct access to a subset of
-resources that it manages and it needs to collaborate with other
-applications to access to all the services and resources it needs. As
-analogy, if you are a clothing retailer, you can access the clothing
-directly, but if you need other materials such as boxes, you need to
-buy them from a box retailer.
+act as clients or as resource providers. For example the
+[Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) is just a client and [Microsoft Graph](https://learn.microsoft.com/en-us/graph/overview) is just a resource
+provider. This may sound counterintuitive but may think that an application just
+have access direct access to a subset of resources that it manages and it needs
+to collaborate with other applications to access to all the services and
+resources it needs. As analogy, if you are a clothing retailer, you can access
+the clothing directly, but if you need other materials such as boxes, you need
+to buy them from a box retailer.
 
 Here is our previous schema with a concrete client, resource provider
 and the resources:
 ```
-                                             .-----
-                                        .--> | Groups
-                                        |    '-----
-	                                    |		
-  \O/    .--------.       .----------.  |    .-----
-   | --->| AZ CLI |------>| MS Graph | -|--> | Users
-  / \    '--------'       '----------'  |    '-----
-  user                                  |
-                                        |    .----
-                                        '--> | Mails
-                            		         '----
+                                           .-----
+                                      .--> | Entra ID Groups
+                                      |    '-----
+	                                  |
+  \O/    .--------.     .----------.  |    .-----
+   | --->| AZ CLI |---->| MS Graph | -|--> | Entra ID Users
+  / \    '--------'     '----------'  |    '-----
+  user                                |
+                                      |    .----
+                                      '--> | Outlook Mails
+                                           '----
 ```
 
 Hope this allows to understand more the role of applications in the
 OAuth 2.0 process. But I would like also to point that an application
 can even act as both the client and resource provider at the same
-time, like the case of Azure Portal.
+time, like the case of [Azure Portal](https://portal.azure.com).
 
-Now we have most of the ingredients, but we are still missing a central
-piece. What is in charge of authenticate the user and grant access to
-the services? Yep, the [Microsoft Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/) we already
-commented, that acts as Identity Provider (or authorization server) in
-which applications trust to provide access.
+Now we have most of the ingredients, but if you are familiar with OAuth 2.0, you
+may know we are still missing a central piece. What is in charge of authenticate
+the user and grant access to the services? Yep, the
+[Microsoft Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/) we already commented, that acts as Identity
+Provider (or authorization server) in which applications trust to provide access.
 
-Here is a more complete picture of the Azure authentication components:
-``` 
+Here is a more complete picture of the Azure authorization components:
+```
                    .-------------.
                    | MS Identity |
 			  .--> | Platform    |
               |    '-------------'                    .-----
-              |                                  .--> | resource 1 
+              |                                  .--> | resource 1
               |                                  |    '-----
-			  |                                  |		
+			  |                                  |
   \O/    .--------.       .-------------------.  |    .-----
    | --->| client |------>| resource provider | -|--> | resource 2
   / \    '--------'       '-------------------'  |    '-----
   user                                           |
                                                  |    .----
                                                  '--> | resource 3
-                            				          '----
+                                                      '----
 ```
 
 In order to recap we have the following components:
@@ -313,40 +334,51 @@ In order to recap we have the following components:
 - **User** / **Resource Owner**: The entity that wants to access to
   the resources. It needs to have permissions to access to the
   resources.
-  
+
 - **Client** : The application that acts on behalf of the user to
   access to the resources. Sometimes it just acts on its own behalf
   without requiring the user. Anyway, it needs to have permissions
   (apart from those of the user) to access the resources. Examples are
   the Azure CLI, Azure Powershell, Outlook application, Teams
   application or the Azure Portal.
-  
+
 - **Resource provider**: The application that provides access to the
-  resources. Examples are Microsoft Graph or Azure Storage.
-  
+  resources. Examples are Microsoft Graph, Azure Storage or the Azure Portal.
+
 - **Resources**: The items that the client wants to access or
   manipulated through the resource provider. Examples can be Users,
   Groups, Virtual Machines, Mails, etc. This is not part of OAuth, but
   it is important to understand that resources are not the same as
-  resource providers and in fact, many are accessible from different
-  resource providers.
+  resource providers and in fact, as we commented previously, many are
+  accessible from different resource providers.
   
 - **Identity Provider** / **Authorization Server** : The entity in
   charge of the authentication and authorization. This provider
   identifies the user and client application and indicates the access
   they have into the target resources. If you are familiar with
-  Kerberos in Active Directory, this acts similar to a KDC.
+  Kerberos in Active Directory, this acts similar to a KDC. In the case of
+  Azure, the [Microsoft Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/) is the Identity Provider.
 
 
-### Authentication flow
+### Authentication/Authorization protocols
 
-And how is the access provided? Well, mostly following the 
-[OAuth 2.0](https://oauth.net/2/) and [OIDC](https://openid.net/developers/how-connect-works/) protocols (even if others like [SAML](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language)
-are also supported).
+In Azure and Microsoft service we can find that two main protocols are supported
+in order to provide authentication and authorization:
+
+- [OAuth 2.0 with Open ID Connect](https://learn.microsoft.com/en-us/entra/identity-platform/v2-app-types)
+- [SAML](https://learn.microsoft.com/en-us/entra/identity-platform/saml-protocol-reference)
+
+
+### OAuth 2.0 Authorization
+
+One of the more common ways to authenticate in Azure is to following the
+[OAuth 2.0](https://oauth.net/2/) with [Open ID Connect (OIDC)](https://openid.net/developers/how-connect-works/) protocol, which provides both
+authentication and authorization.
+
 
 The basic flow is the following:
 
-1. The client will ask to the Identity Provider for an access token to
+1. The Client will ask to the Identity Provider for an access token to
   the desired application on behalf of the user, whose credentials
   (like username and password) are sent.
 2. If the provided credentials are correct, the Identity Provider will
@@ -430,7 +462,7 @@ Content-Length: 486
 
 As we can see, in case of error, the identity endpoint provide us with
 an error message.
-  
+
 On the other hand, in case credentials are correct, the response will
 be something like the following:
 ```
@@ -472,16 +504,69 @@ Here we can see the following interesting items:
 - **scope**: Indicates the permissions the access token grants in the
   target application. This scope depends on both the user and the
   client permissions.
-  
+
 - **expires_on**: Indicates when the access token will expire.
-  
+
 - **refresh_token**: A [refresh token](https://oauth.net/2/refresh-tokens/) is a token we can use to ask
   for another access token when the current one is expired (the
   [refresh token has a fixed expiration date](https://learn.microsoft.com/en-us/entra/identity-platform/refresh-tokens)). If you are
   familiar with Kerberos, the refresh token is similar to a TGT.
 
+### OAuth 2.0 Endpoints
 
-### Azure tokens
+In order to use OAuth 2.0, we need to know the OAuth 2.0 endpoints, that are
+mainly two:
+- **Authorization Endpoint**: The endpoint used to issue the authorization
+  grants (and Access Tokens in case of implicit flow).
+- **Token Endpoint**: The endpoint used to issue the Access and Refresh Tokens.
+
+And in the case of Microsoft Identity Platform we can distinguish
+[several groups of endpoints](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc#find-your-apps-openid-configuration-document-uri):
+
+- **common**: Located under
+  `https://login.microsoftonline.com/common/v2.0`. Is an endpoint used by all
+  kind of Microsoft accounts, both personal or work or school accounts.
+  
+- **organizations**: Located under
+  `https://login.microsoftonline.com/organizations/v2.0`. Used by work or school
+  accounts.
+  
+- **consumers**: Located under
+  `https://login.microsoftonline.com/consumers/v2.0`. Used by work or school
+  accounts.
+
+- **tenant**: Located under `https://login.microsoftonline.com/{tenant}/v2.0`
+  where tenant is an Tenant ID or associated domain. For example
+  `https://login.microsoftonline.com/contoso.com/v2.0` or
+  `https://login.microsoftonline.com/6babcaad-604b-40ac-a9d7-9fd97c0b779f/v2.0/`.
+  It is used to login in the context of that specific tenant.
+
+In order to know the endpoints, we can use the OIDC discovery endpoint
+`/.well-known/openid-configuration`. So if we want to get the endpoints for
+`common` we can do the following:
+```
+$ curl https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration | jq '{"authorization_endpoint","token_endpoint"}'
+{
+  "authorization_endpoint": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+  "token_endpoint": "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+}
+```
+
+Moreover, you may notice that there is a `v2.0` in the path. That is because it
+is the endpoint v2.0. You can access to the v1.0 endpoint just removing the
+`/v2.0` part of the path. For example, the common v1.0 endpoint is
+`https://login.microsoftonline.com/common/`.
+
+Here are some articles describing the differences between the endpoints versions (not sure if
+it is accurate nowadays):
+- [Azure AD Endpoint V1 vs V2](https://nicolgit.github.io/AzureAD-Endopoint-V1-vs-V2-comparison/)
+- [V1 and V2 Identity and Access tokens with Azure Active Directory](https://matthijs.hoekstraonline.net/2020/04/27/v1-and-v2-identity-and-access-tokens-with-azure-active-directory/)
+
+### OAuth 2.0 Scopes
+
+- [Scopes and permissions in the Microsoft identity platform](https://learn.microsoft.com/en-us/entra/identity-platform/scopes-oidc)
+
+### OAuth 2.0 tokens
 
 
 The following resources are interesting to learn more about Azure
@@ -556,7 +641,7 @@ fields, also known as claims:
 - *tid*: The tenant ID in which the user is singning in to.
 - *wids*: Identify the roles associated to the user.
 
-You can see the description of the rest of claims in 
+You can see the description of the rest of claims in
 [Access token claims reference: Payload Claims](https://learn.microsoft.com/en-us/entra/identity-platform/access-token-claims-reference#payload-claims).
 
 In order to test other tokens for other clients, applications and
@@ -648,20 +733,20 @@ client_id=1b730954-1685-4b74-9bfd-dac224a7b894&grant_type=refresh_token
 
 A bad notice is that the refresh tokens cannot be inspected as the
 access tokens since they are encrypted, and their information is only
-available to Microsoft services. 
+available to Microsoft services.
 
 However, we know that each refresh token is tied to both the user and
 the client (excep in case of Family Refresh Tokens). So a refresh
 token can only be used by a client to request access on behalf on an
-specific user. 
+specific user.
 
 If we tried to use a refresh token for another client id, we will
 receive a similar response to the following:
 ```
 $ roadtx gettokens --refresh-token 1.AUEBsRM_HEZ0qUafZjeyZ7...stripped... --client fc0f3af4-6835-4174-b806-f7db311fd2f3 --resource msgraph
-Error during authentication: AADSTS70000: Provided grant is invalid or 
-malformed. Trace ID: 41eb8263-e7ab-4529-8910-a8a376676001 
-Correlation ID: 23d48881-43e4-470e-b243-f88295f86c2d Timestamp: 
+Error during authentication: AADSTS70000: Provided grant is invalid or
+malformed. Trace ID: 41eb8263-e7ab-4529-8910-a8a376676001
+Correlation ID: 23d48881-43e4-470e-b243-f88295f86c2d Timestamp:
 2025-03-01 09:37:16Z
 ```
 
@@ -696,7 +781,7 @@ This behaviour has security implications, since scopes on target
 applications (also known as resource providers) are tied to the client
 permissions (and user too). However, by having a FRT it could be
 [possible to bypass some restrictions by asking for an access token
-linked to other client](https://github.com/secureworks/family-of-client-ids-research?tab=readme-ov-file#what-are-the-security-implications-of-family-refresh-tokens) of the family. 
+linked to other client](https://github.com/secureworks/family-of-client-ids-research?tab=readme-ov-file#what-are-the-security-implications-of-family-refresh-tokens) of the family.
 
 
 Let's see a pratical example. First we will ask for a FRT token with
@@ -775,14 +860,15 @@ $ roadtx describe -t eyJ0eXAiOiJKV1QiLCJ...stripped...
 }
 ```
 
-We can appreciate that fields are similar to those in a access token,
-but some differences arise, like that it has no expiration time and
-there is no scope information. This as we have said, makes sense since
-it is not a token used to request access, but just used by the
-Identity Provider to inform about the user data. In this example you
-may notice that the ID token is not signed, but this is not always the
-case. For more information about the fields you can check [ID token
-claim reference](https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference).
+We can appreciate that fields are similar to those in a access token, but some
+differences arise, like that there is no scope information. This as we have
+said, makes sense since it is not a token used to request access, but just used
+by the Client to receive information about the user from the Identity
+Provider. In this example you may notice that the ID token is not signed, but this is
+not always the case, in fact, the OIDC specification explicity says that it must
+be signed (but you know, [Microsoft always promotes interoperability](https://en.wikipedia.org/wiki/Embrace,_extend,_and_extinguish)). For
+more information about the ID token fields you can check 
+[ID token claim reference](https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference).
 
 In case you are curious, you can get an example of ID token by inspecting the communication
 while adding a device to Intune with [pytune](https://github.com/secureworks/pytune) like this (and in
@@ -811,6 +897,109 @@ see requests and responses from
 should contain a ID token in a JSON identified by the (surprise)
 `id_token` field.
 
+
+#### Primary Refresh Token (PRT)
+
+A [Primary Refresh Token](https://learn.microsoft.com/en-us/entra/identity/devices/concept-primary-refresh-token), usually known as PRT, is a refresh token
+that is not bound to an specific user and client, but to an user and a
+device. This allows to use the PRT to perform <u>SSO from organization
+devices to any app</u>. In order to use a PRT, it is required to probe
+that is being sent from the bounded device. This is done by using it
+together with a session key only known by the device, that is usually .
+
+In order to use the PRT, the device produces a key derived from the
+session key and a random context (something similar to an
+[IV](https://en.wikipedia.org/wiki/Initialization_vector)). Then this derived key is used to sign a JWT where the PRT is
+included.
+
+Here is an example of JWT that contains a PRT:
+```
+$ roadtx describe -t eyJhbGciOiJIUzI1NiIsImN0eC...stripped...
+{
+    "alg": "HS256",
+    "ctx": "ET4R9hXLdYjws0iigwpWtYnrfa3/Mz1Y",
+    "kdf_ver": 2,
+    "typ": "JWT"
+}
+{
+    "aud": "login.microsoftonline.com",
+    "client_id": "9ba1a5c7-f17a-4de9-a1f1-6178c8d51223",
+    "exp": "1741031695",
+    "grant_type": "refresh_token",
+    "iat": "1741028095",
+    "iss": "aad:brokerplugin",
+    "redirect_uri": "ms-appx-web://Microsoft.AAD.BrokerPlugin/9ba1a5c7-f17a-4de9-a1f1-6178c8d51223",
+    "refresh_token": "1.AUEBsRM_HEZ0qUafZjeyZ7-E14c7qjhtoBdIsn...stripped...",
+    "request_nonce": "AwABEgEAAAADAOz_BQD0_0Tw3M43qBIVd7_H713hn_cVCCV-CgDZy6dyREFPq-5-qJzjqluhpeaLHx4KXyMwzTzQm4JZcDPRh-UTMTFRRpMgAA",
+    "resource": "https://graph.microsoft.com/",
+    "scope": "openid",
+    "win_ver": "10.0.19041.1620"
+}
+```
+
+As we can observe, it contains a `ctx` field in the JWT header that
+indicates the random context used to sign the JWT with the derived
+key. The Microsoft Identity Platform can access to the session key
+since [it is contained in the PRT](https://learn.microsoft.com/en-us/entra/identity/devices/concept-primary-refresh-token#what-does-the-prt-contain), which can be decrypted by
+Microsoft. Then the context is also used to derive the signing key and
+verify that the JWT was issued by the correct device.
+
+The JWT produced from the PRT is many times used in the
+[browser to perform SSO](https://learn.microsoft.com/en-us/entra/identity/devices/concept-primary-refresh-token#browser-sso-using-prt) inside the `x-ms-RefreshTokenCredential`
+cookie, which is known as the **PRT cookie**. This allows users to
+access to their apps from their devices.
+
+Since the PRT session key is so important for user authentication, it
+is kept in the TPM, in case it is available ([TPM is required by
+Windows 11](https://www.microsoft.com/en-us/windows/windows-11-specifications)([security or planned obsolescence???](https://leafandcore.com/2021/07/03/windows-11-may-be-the-worst-planned-obsolescence-weve-seen/))),
+or in the lsass process otherwise, protected by DPAPI. You can check
+[Digging further into the Primary Refresh Token](https://dirkjanm.io/digging-further-into-the-primary-refresh-token/) by Dirk-jan
+Mollema to know more about it.
+
+However, by mimicking the web browser behaviour, which is documented
+in [Abusing Azure AD SSO with the Primary Refresh Token](https://dirkjanm.io/abusing-azure-ad-sso-with-the-primary-refresh-token/) and
+[Requesting Azure AD Request Tokens on Azure-AD-joined Machines for
+Browser SSO](https://posts.specterops.io/requesting-azure-ad-request-tokens-on-azure-ad-joined-machines-for-browser-sso-2b0409caad30), it is possible to request the operating system to
+create the PRT cookies when in the user's context. The tools
+[ROADtoken](https://github.com/dirkjanm/ROADtoken) [RequestAADRefreshToken](https://github.com/leechristensen/RequestAADRefreshToken/) allows to perform this
+attack.
+
+When is the PRT issued? The PRT is still a refresh token that is bound
+to an user, so you may imagine that the
+[PRT is received when the user logs in](https://learn.microsoft.com/en-us/entra/identity/devices/concept-primary-refresh-token#how-is-a-prt-issued). When the user logs in, the
+device sends a request for authentication by using OpenID Connect
+(part of OAuth 2.0) to request an ID token for the user and a PRT and
+its associated session key. This request is signed with the
+Entra ID certificate key associated with the device and the retrieved PRT
+session key is also encrypted with the device certificate so only the
+device can decrypt it with its private key.
+
+You can see an example of user authentication into a device by
+executing [pytune](https://github.com/secureworks/pytune) `intune_enroll` command and monitoring the HTTP
+requests with BurpSuite or ZAP. This would be the commands:
+```
+$ export HTTPS_PROXY=http://127.0.0.1:8080
+$ python3 ./pytune.py enroll_intune -o Windows -d fake-device -c fake-device.pfx -u ada@contoso.onmicrosoft.com -p Sup3rP4ssw0rd
+[*] resolved enrollment url: https://fef.msub06.manage.microsoft.com/StatelessEnrollmentService/DeviceEnrollment.svc
+[+] successfully enrolled fake-device to Intune!
+[*] here is your MDM pfx: fake-device_mdm.pfx (pw: password)
+```
+
+Here there some references related to the PRT and PRT cookie that you
+can check for more details:
+- [Understanding Primary Refresh Token (PRT)](https://learn.microsoft.com/en-us/entra/identity/devices/concept-primary-refresh-token)
+- 05/08/2020 [Digging further into the Primary Refresh Token](https://dirkjanm.io/digging-further-into-the-primary-refresh-token/) by
+  Dirk-jan Mollema
+- 21/07/2020 [Abusing Azure AD SSO with the Primary Refresh Token](https://dirkjanm.io/abusing-azure-ad-sso-with-the-primary-refresh-token/)
+  by Dirk-jan Mollema
+
+
+### SAML Authorization
+
+[How the Microsoft identity platform uses the SAML protocol](https://learn.microsoft.com/en-us/entra/identity-platform/saml-protocol-reference)
+
+
+
 ## Resources
 
 
@@ -818,7 +1007,3 @@ should contain a ID token in a JSON identified by the (surprise)
 - [AADInternals.com](https://aadinternals.com/) by Dr Nestori Syynimaa (@DrAzureAD)
 - [Good Workaround!](https://goodworkaround.com/) by Marius Solbakken
 - [dirkjanm.io](https://dirkjanm.io/) by Dirk-jan Mollema
-
-
-
-

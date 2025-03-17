@@ -37,7 +37,7 @@ commands:
 - `r2 -q -c i <file>`
 
 Here is an example of the former that avoids to load the binary into r2:
-```
+```shell
 $ rabin2 -I ntdll.dll 
 arch     x86
 baddr    0x180000000
@@ -82,7 +82,7 @@ To get binary imports we can use:
 - `r2 -q -c iE <file>`
 
 Here is an example of `rabin2 -E`:
-```
+```shell
 $ rabin2 -E ntdll.dll
 nth  paddr      vaddr       bind   type size lib       name                                                  demangled
 ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
