@@ -5,11 +5,20 @@
 ## Cloud
 * [Azure](cloud/azure.md)
 
+## Exploiting
+* [Fuzzing](./exploiting/fuzzing.md)
+
 ## Crypto
 * [OpenSSL](./crypto/openssl.md)
 
 ## Malware
 * [Windows Malware](malware/windows-malware.md)
+
+## Network
+* [Cellular](./network/cellular.md)
+
+## Programming
+* [Compilation](./programming/compilation.md)
 
 ## Reversing
 

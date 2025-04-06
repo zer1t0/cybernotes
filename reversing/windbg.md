@@ -712,3 +712,4 @@ Some samples of Windbg javascript scripts:
   & Overcl0k
 - [WinDBG quick start tutorial](https://codemachine.com/articles/windbg_quickstart.html) 
 - [WinDBG expression evaluation tutorial: An in-depth tutorial on the MASM and C++ expression evaluators in WinDBG.](https://codemachine.com/articles/windbg_expressions.html)
+- [Dbg3011_Advanced_WinDbg](https://gitlab.com/opensecuritytraining/dbg3011_advanced_windbg) by Cedric Halbronn
