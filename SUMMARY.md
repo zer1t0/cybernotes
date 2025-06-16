@@ -22,6 +22,7 @@
 
 ## Reversing
 
+* [GDB / Pwndbg](./reversing/gdb.md)
 * [GNU/Linux monitoring](./reversing/gnulinux-monitoring.md)
 * [PE](reversing/pe.md)
 * [Radare2](reversing/radare2.md)
