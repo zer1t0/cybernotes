@@ -11,7 +11,7 @@ many of the in the `%SystemRoot%\System32\config\` (aka
 `C:\Windows\System32\config\`).
 
 
-## SAM
+### SAM
 The SAM hive is stored in `%SystemRoot%\System32\config\SAM` and maps
 to `HKLM\SAM`. It contains the information about the local users.
 
@@ -28,7 +28,7 @@ HKEY_LOCAL_MACHINE\SAM\SAM\LastSkuUpgrade
 HKEY_LOCAL_MACHINE\SAM\SAM\RXACT
 ```
 
-## Security
+### Security
 The Security hive is stored in `%SystemRoot%\System32\config\SECURITY`
 and maps to `HKLM\SECURITY`. It stores several security information like the
 [LSA Secrets](https://passcape.com/index.php?section=docsys&cmd=details&id=23) that contains the machine domain credentials or the
@@ -45,7 +45,7 @@ HKEY_LOCAL_MACHINE\SECURITY\RXACT
 HKEY_LOCAL_MACHINE\SECURITY\SAM
 ```
   
-## Software
+### Software
 
 The Software hive is stored in `%SystemRoot%\System32\config\SOFTWARE`
 and maps to `HKLM\SOFTWARE`. It contains the configuration of the 
@@ -73,7 +73,7 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Windows
 HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node
 ```
 
-## System
+### System
 The System hive is stored in `%SystemRoot%\System32\config\SYSTEM` and
 maps to `HKLM\SYSTEM`. It stores system configuration, including the
 Boot Key used to decrypt the SAM and SECURITY hives.
@@ -101,7 +101,7 @@ HKEY_LOCAL_MACHINE\SYSTEM\WPA
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet
 ```
 
-## Default
+### Default
 It is stored in `%SystemRoot%\System32\config\DEFAULT` and maps to `HKLM\.DEFAULT`.
 
 ```
@@ -118,13 +118,13 @@ HKEY_USERS\.DEFAULT\Software
 HKEY_USERS\.DEFAULT\System
 ```
 
-## User
+### User
 
 There is one User hive per user and it is stored in
 `%USERPROFILE%\Ntuser.dat` (aka `C:\Users\<user>\Ntuser.dat`) and
 maps to `HKU\<User-SID>`.
   
-## User classes
+### User classes
 There is one User classes hive per user and it is stored in
 `%USERPROFILE%\AppData\Local\Microsoft\Windows\Usrclass.dat` and maps
 to `HKU\<User-SID>\Software\Classes`.
