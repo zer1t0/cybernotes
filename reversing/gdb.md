@@ -131,11 +131,32 @@ Non-debugging symbols:
 
 ## Data
 
-### Show string
+### Print string
 
+We can print an string with the `x/s` or `p` commands from a reference to the
+string:
 ```
 (gdb) x/s 0x08046820
 0x08046820:	"/bin/bash"
+```
+
+```
+(gdb) p (char*)0x00010876
+$14 = 0x10876 "Hello world\n"
+```
+
+Be aware that it is common to find a register or memory address that
+points to a string address, not the string directly, so you may need indicate
+that is a `char **` type like this:
+
+```
+(gdb) x/s *(char**)$esp
+0x56557008:	"Hello %s\n"
+```
+
+```
+(gdb) p *(char**)$esp
+$1 = 0x56557008 "Hello %s\n"
 ```
 
 ### Print array
