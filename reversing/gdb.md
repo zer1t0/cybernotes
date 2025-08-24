@@ -3,6 +3,29 @@
 Here are described different aspects of gdb and how to perform certain
 actions. Additionally, commands of [pwndbg](https://github.com/pwndbg/pwndbg) are also presented.
 
+## Launch gdb
+
+To debug/examine a binary:
+```
+gdb <binary-file>
+```
+
+To attach to a living process:
+```
+gdb <binary-file> <pid>
+```
+
+We need to indicate the binary file that the process uses to get access to the
+symbols.
+
+To examine a core dump:
+```
+gdb <binary-file> <core-file>
+```
+
+For a core dump we need to indicate the binary used by the process that creates
+the core dump, in order to access to the symbols.
+
 ## Help
 
 We can get the help for an specific command by using `help <command>`:
@@ -421,7 +444,8 @@ use `step` or `s`:
 (gdb) step
 ```
 
-Or we can use `next` or `n`:
+Or we can use `next` or `n` to go to the next source line without enter into any
+called function:
 ```
 (gdb) next
 ```

@@ -15,6 +15,14 @@ openssl x509 -in certificate.cer -noout -text
 - [How do I view the details of a digital certificate .cer file?](https://serverfault.com/a/215617)
 
 
+### Generate self signed certificate
+
+```
+openssl req -x509 -newkey rsa:4096 -keyout cert.key -out cert.pem -sha256 -days 3650 -nodes -subj "/CN=test.local"
+```
+
+- [How can I generate a self-signed SSL certificate using OpenSSL?](https://stackoverflow.com/a/10176685)
+
 ### Extract certificate and key from pfx, p12
 
 Extract the certificate

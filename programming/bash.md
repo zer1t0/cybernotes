@@ -1,5 +1,16 @@
 # Bash
 
+## Tricks
+
+### Write large file with cat
+
+```
+cat > /tmp/out.txt <<EOF
+green
+black
+white
+EOF
+```
 
 ## Loops
 
@@ -13,6 +24,14 @@ while true; do echo 3; echo 4; done
 While true with a command in background:
 ```sh
 while true; do echo 3 & echo 4; done
+```
+
+## Read lines of file in loop
+
+```sh
+while read l; do
+    echo "$l"
+done < /etc/resolv.conf
 ```
 
 ## Pipes
