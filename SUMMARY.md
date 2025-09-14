@@ -12,7 +12,7 @@
 - [OpenSSL](./crypto/openssl.md)
 
 ## Devops
-- [Docker](./devops/docker.md)
+- [Podman](./devops/podman.md)
 
 ## Exploiting
 - [ARM](./exploiting/arm.md)
@@ -29,10 +29,12 @@
 
 ## Network
 - [Cellular](./network/cellular.md)
+- [Matrix](./network/matrix.md)
 
 ## Programming
 - [Bash]( ./programming/bash.md)
 - [Compilation](./programming/compilation.md)
+- [Emacs](./programming/emacs.md)
 - [Git](./programming/git.md)
 - [Python](./programming/python.md)
 

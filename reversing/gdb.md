@@ -108,6 +108,31 @@ End of assembler dump.
 (gdb) quit
 ```
 
+### Attach to child process when fork
+
+When we are debugging a program that forks (like for example some kind of
+network service) and we want to debug the child process, we can indicate to gdb
+to automatically detach from parent and attach to child with:
+```
+(gdb) set follow-fork-mode child
+```
+
+To verify it we can check the value of `follow-fork-mode`:
+```
+(gdb) show follow-fork-mode
+Debugger response to a program call of fork or vfork is "child".
+```
+
+Once the program fork, we should see the following message:
+```
+(gdb) c
+[Attaching after process 1 fork to child process 18]
+[New inferior 2 (process 18)]
+[Detaching after fork from parent process 1]
+[Inferior 1 (process 1) detached]
+```
+
+
 ## Symbols
 
 ### Get symbol address
@@ -199,6 +224,61 @@ print (int[4])*$rax
 $16 = {0, 4, 8, 9}
 ```
 
+### Print variables while executing
+
+We can insert calls to `printf` function with `dprintf` (Dynamic Printf). Here
+is an example of inserting a dynamic printf to print the value of a variable
+inside a loop:
+
+```
+(gdb) list main
+1	#include <stdio.h>
+2
+3	int main() {
+4	  int i = 0;
+5	  int sum = 0;
+6
+7	  for(i = 0; i < 10; i++) {
+8	    sum += i;
+9	  }
+10
+(gdb) dprintf main-loop.c:8,"Sum: %d\n",sum
+Dprintf 1 at 0x1158: file main-loop.c, line 8.
+(gdb) r
+...
+Sum: 0
+Sum: 0
+Sum: 1
+Sum: 3
+Sum: 6
+Sum: 10
+Sum: 15
+Sum: 21
+Sum: 28
+Sum: 36
+Total: 10
+[Inferior 1 (process 5350) exited normally]
+```
+
+In order to print the variables, `dprintf` inserts a breakpoint, so we can use
+the `condition` command to add a condition to only print under defined
+circunstances. For example, the next lines makes that variable `sum` is only
+printed when its value is odd:
+
+```
+(gdb) condition 1 sum % 2 == 1
+(gdb) r
+Starting program: /home/ada/projects/c-test/main-loop
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+Sum: 1
+Sum: 3
+Sum: 15
+Sum: 21
+Total: 10
+[Inferior 1 (process 3216) exited normally]
+```
+
 ### Print stack
 
 We can list the frames of the stack with the [backtrace](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Backtrace.html#Backtrace) command:
@@ -232,6 +312,30 @@ pwndbg> stack
 05:0028│+028     0x7fffffffe048 ◂— 0x100000003
 06:0030│+030     0x7fffffffe050 ◂— 3
 07:0038│+038     0x7fffffffe058 —▸ 0x7ffff7def24a (__libc_start_call_main+122) ◂— mov edi, eax
+```
+
+### Show the data type
+
+If we have debugging symbols available, we can see the type of a variable with the `ptype` command:
+
+```
+(gdb) ptype dog
+type = struct animal_t {
+    char *name;
+    int species;
+    char *sound;
+}
+```
+
+And we can even show the offsets of type:
+```
+(gdb) ptype /o dog
+type = struct animal_t {
+/*    0      |     8 */    char *name;
+/*    8      |     4 */    int species;
+/* XXX  4-byte hole  */
+/*   16      |     8 */    char *sound;
+}
 ```
 
 ### Show process command line
@@ -277,7 +381,6 @@ Mapped address spaces:
 ```
 
 ### Registers
-
 #### Show registers
 
 We can use the `info registers` command to display the registers values:
@@ -310,7 +413,28 @@ In case we just want to get the value of one register we can pass it to `info re
 eax            0x8048670	134514288
 ```
 
+We can also use `print` command to check a register value:
+```
+(gdb) p $rax
+$3 = 0x5555556b12b0
+```
 
+Resources:
+- [GDB: Registers](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Registers.html#Registers)
+
+#### Modify registers
+
+We can use the [set](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Assignment.html) command to modify the value of a register:
+```
+(gdb) set $rax = 7
+```
+
+Curiously, we can also use the `print` command for the same purpose, with the
+only difference that the value will be printed after being set:
+```
+(gdb) print $rax = 7
+$6 = 0x7
+```
 
 ## Execution
 ### Breakpoints
@@ -354,6 +478,30 @@ Breakpoint 2 at 0x8048567
 This will set a breakpoint into the <u>assembly instruction</u> whose offset is
 65 inside the `main` function.
 
+##### Set breakpoint at code line
+
+With debugging symbols, we can also set breakpoints in lines inside the source
+code files:
+
+```
+(gdb) b main.c:42
+Breakpoint 1 at 0x5555555755a1: file main.c, line 42.
+```
+
+##### Set conditional breakpoint
+
+We can set a conditional breakpoint with an `if` clause to specify a condition:
+```
+(gdb) break main-loop.c:14 if (sum >= 10)
+Breakpoint 1 at 0x1191: file main-loop.c, line 14.
+```
+
+```
+(gdb) break *main+72 if $eax > 5
+Breakpoint 3 at 0x555555555191: file main-loop.c, line 14.
+```
+
+
 #### List breakpoints
 
 We can use the command `info breakpoints` or `info break` or `i b` to list our
@@ -362,6 +510,15 @@ breakpoints:
 (gdb) info break
 Num     Type           Disp Enb Address    What
 1       breakpoint     keep y   0x804875b <main+5>
+```
+
+#### Add condition to breakpoint
+
+We can use the [condition](https://www.sourceware.org/gdb/current/onlinedocs/gdb.html/Conditions.html) command to add a condition to an already set
+breakpoint. We need to specify the breakpoint number along with the condition
+:
+```
+(gdb) condition 1 sum > 4
 ```
 
 #### Remove breakpoint
@@ -406,6 +563,50 @@ Num     Type           Disp Enb Address    What
 13      watchpoint     keep y              $eax
 ```
 
+### Signals
+
+This section explains how to manage [signals](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Signals.html) with gdb.
+
+#### Check how a signal is handled
+
+We can check how a signal is handled by using the `handle` command:
+```
+(gdb) handle SIGPIPE
+Signal        Stop	Print	Pass to program	Description
+SIGPIPE       Yes	Yes	Yes		Broken pipe
+```
+
+Additionally, we can use the `info signals` or `info handle` commands to show
+how every signal is handled:
+```
+(gdb) info signals
+Signal        Stop	Print	Pass to program	Description
+
+SIGHUP        Yes	Yes	Yes		Hangup
+SIGINT        Yes	Yes	No		Interrupt
+SIGQUIT       Yes	Yes	Yes		Quit
+...
+```
+
+#### Change how a signal is handled
+
+We can indicate to gdb how to handle a signal by using the `handle` command:
+```
+(gdb) handle SIGPIPE nostop print pass
+Signal        Stop	Print	Pass to program	Description
+SIGPIPE       No	Yes	Yes		Broken pipe
+```
+
+There are three sets of options:
+- `stop` | `nostop`: Indicates if gdb must retake control when signal is
+  received.
+- `print` | `noprint`: Indicates if gdb must indicate when the signal is
+  received.
+- `pass` | `nopass`: Indicates if gdb must pass the signal to the debugee.
+
+For more information check `help handle`.
+
+
 ### Execution controls
 #### Start program
 
@@ -431,37 +632,30 @@ breakpoint by using the `continue` (or `cont` or `c`) command:
 (gdb) c
 ```
 
-#### Stepping
+#### Step in
 
-We can execute only one source code line by using the `next` or the `step`
-commands. The difference between them is that if the next line is a function
-call, then `step` will enter the function whereas `next` will skip the function
-and go to the next line in the current function.
-
-To go to the next source code line, and enter a function if it's called, we can
-use `step` or `s`:
+We can execute only one source code line, entering in a function if that is the
+case, with `step` or `s`:
 ```
 (gdb) step
 ```
 
-Or we can use `next` or `n` to go to the next source line without enter into any
-called function:
-```
-(gdb) next
-```
-
-Additionally, if we want to step over assembly instructions instead of source
-code lines, we can do it with `stepi` and `nexti` commands, that are analogous
-to `step` and `next`:
-
-We can use `stepi` or `si` to execute one assembly instruction and enter into
-function calls:
+If we want to only execute one assembly instruction then we can use `stepi` or
+`si`:
 ```
 (gdb) stepi
 ```
 
-Or we can use `nexti` or `ni` to execute one assembly instruction without
-entering into function calls:
+#### Step over
+
+We can execute only one source code line, avoiding entering into functions,
+with `next`:
+```
+(gdb) next
+```
+
+If we want to only execute one assembly instruction then we can use `nexti` or
+`ni`:
 ```
 (gdb) nexti
 ```
@@ -481,7 +675,83 @@ function finishes (or a breakpoint is triggered):
 To execute until we are out of a loop, we can use the `until` command, that will
 execute until an instruction with a higher memory address is reached
 
+## Code
 
+### Show the source code
+
+Warning: For this to work we need the binary with symbols and the source code.
+
+We can use the `list` command to print source code in an specific region:
+
+```
+(gdb) list main
+1	#include <stdio.h>
+2	#include <stdlib.h>
+3
+4	int main(int argc, char** argv) {
+5	  int i = 0;
+6	  int sum = 0;
+7	  int start = 0;
+8
+9	  if (argc > 1) {
+10	    start = atoi(argv[1]);
+```
+
+However, as we can appreciate, just a tiny portion is show. By default, `list`
+will show the code around the line we indicate, in this case the code around the
+line that starts main function.
+
+We can extend the portion by indicating the starting and ending line separated
+by a comma:
+
+```
+(gdb) list main,20
+4	int main(int argc, char** argv) {
+5	  int i = 0;
+6	  int sum = 0;
+7	  int start = 0;
+8
+9	  if (argc > 1) {
+10	    start = atoi(argv[1]);
+11	  }
+12
+13	  for(i = start; i < 10; i++) {
+14	    sum += i;
+15	  }
+16
+17	  printf("Total: %d\n", i);
+18	}
+```
+
+This is not a perfect approach to show completely a function, I know, not sure
+if there is a way to being able to show all the source code of a function in a
+simple way, but anyway we can read the code with our favorite text editor.
+
+Additionally, we can use the **TUI** mode with `Ctrl+x a` to see the code. Once in the
+TUI mode the code should be displayed, or we can activate it with `layout src` command.
+
+### Show the assembler code of a function
+
+We can use the `disassemble` command of gdb to show the assembly code of a function:
+
+```
+(gdb) disas main
+Dump of assembler code for function main:
+   0x0000000000001149 <+0>:	push   rbp
+   0x000000000000114a <+1>:	mov    rbp,rsp
+   0x000000000000114d <+4>:	sub    rsp,0x20
+   0x0000000000001151 <+8>:	mov    DWORD PTR [rbp-0x14],edi
+   0x0000000000001154 <+11>:	mov    QWORD PTR [rbp-0x20],rsi
+   ................................
+   0x00000000000011a6 <+93>:	lea    rax,[rip+0xe57]        # 0x2004
+   0x00000000000011ad <+100>:	mov    rdi,rax
+   0x00000000000011b0 <+103>:	mov    eax,0x0
+   0x00000000000011b5 <+108>:	call   0x1030 <printf@plt>
+   0x00000000000011ba <+113>:	mov    eax,0x0
+   0x00000000000011bf <+118>:	leave
+   0x00000000000011c0 <+119>:	ret
+End of assembler dump.
+```
 
 ## Scripting
 
