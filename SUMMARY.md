@@ -29,6 +29,7 @@
 
 ## Network
 - [Cellular](./network/cellular.md)
+- [Email](./network/email.md)
 - [Matrix](./network/matrix.md)
 
 ## Programming
@@ -40,7 +41,7 @@
 
 ## Reversing
 - [ELF](./reversing/elf.md)
-- [GDB / Pwndbg](./reversing/gdb.md)
+- [GDB / Pwndbg / GEF](./reversing/gdb.md)
 - [GNU/Linux monitoring](./reversing/gnulinux-monitoring.md)
 - [PE](./reversing/pe.md)
 - [Radare2](./reversing/radare2.md)

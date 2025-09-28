@@ -1,7 +1,26 @@
-# GDB / Pwndbg
+# GDB / Pwndbg / GEF
 
 Here are described different aspects of gdb and how to perform certain
-actions. Additionally, commands of [pwndbg](https://github.com/pwndbg/pwndbg) are also presented.
+actions. Additionally, commands of [pwndbg](https://github.com/pwndbg/pwndbg) and [gef](https://github.com/hugsy/gef) are also presented.
+
+The commands of gdb will be start by the `(gdb)` prompt. For example:
+```
+(gdb) info registers
+```
+The gdb commands can be always used inside gdb, even if we are using gef or
+pwndbg.
+
+The gef commands will start by the `gef➤` prompt. These commands will require
+the use of [gef](https://github.com/hugsy/gef). For example:
+```
+gef➤ pattern create
+```
+
+The pwndbg commands will start by the `pwndbg>` prompt. These commands will
+require the use of [pwndbg](https://github.com/pwndbg/pwndbg). For example:
+```
+pwndbg> stack
+```
 
 ## Launch gdb
 
@@ -25,6 +44,25 @@ gdb <binary-file> <core-file>
 
 For a core dump we need to indicate the binary used by the process that creates
 the core dump, in order to access to the symbols.
+
+### Launch gdbserver
+
+We can a launch a gdbserver in remote (or even local) machine with
+`gdbserver <host>:<port> <binary-file>`. For example:
+```
+$ gdbserver localhost:2000 /bin/ls
+```
+
+Or to attach to process ``gdbserver <host>:<port> --attach <pid>`:
+```
+$ gdbserver localhost:2000 --attach 23958
+```
+
+And then we connect to gdbserver with the `target` command:
+```
+$ gdb -q
+(gdb) target remote localhost:2000
+```
 
 ## Help
 
@@ -132,6 +170,49 @@ Once the program fork, we should see the following message:
 [Inferior 1 (process 1) detached]
 ```
 
+
+### Show current architecture
+
+We can see what is the current target architecture with `show architecture` command:
+```
+(gdb) show architecture
+The target architecture is set to "auto" (currently "i386:x86-64").
+```
+
+### Change current architecture
+
+We can use the `set architecture` command to change the architecture that gdb is
+using to inspect the target:
+
+```
+(gdb) set architecture armv5t
+The target architecture is set to "armv5t".
+```
+
+### Using De Bruijn cyclic pattern
+
+We can generate a [De Bruijn cyclic pattern](https://en.wikipedia.org/wiki/De_Bruijn_sequence) with the gef command [pattern create](https://hugsy.github.io/gef/commands/pattern/):
+```
+gef➤  pattern create --period 4 60
+[+] Generating a pattern of 60 bytes (n=4)
+aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaa
+```
+
+And then we can search the offset of a substring in the pattern with [pattern
+search](https://hugsy.github.io/gef/commands/pattern/#pattern-search). We can provide a number or a string to search:
+```
+gef➤  pattern search --period 4 0x6161616d
+[+] Searching for '0x6161616d'
+[+] Found at offset 48 (little-endian search) likely
+[+] Found at offset 45 (big-endian search)
+```
+
+```
+gef➤  pattern search --period 4 "aaba"
+[+] Searching for 'aaba'
+[+] Found at offset 3 (little-endian search) likely
+[+] Found at offset 2 (big-endian search)
+```
 
 ## Symbols
 
