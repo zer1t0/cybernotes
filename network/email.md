@@ -100,6 +100,8 @@ indicates that anyone can send an email from the given domain.
 Resources:
 - [Wikipedia: Sender Policy Framework](https://en.wikipedia.org/wiki/Sender_Policy_Framework)
 - [What is a DNS SPF record?](https://www.cloudflare.com/learning/dns/dns-records/dns-spf-record/)
+- [RFC 7208: Sender Policy Framework (SPF) for Authorizing Use of Domains in Email, Version 1](https://datatracker.ietf.org/doc/html/rfc7208)
+
 
 ## DMARC
 
@@ -107,7 +109,12 @@ DMARC (Domain-based Message Authentication Reporting and Conformance)
 is policy mechanism that instructs what to do if SPF or DKIM
 authentication fails.
 
+```
+$ dig TXT _dmarc.wikipedia.org | grep DMARC
+_dmarc.wikipedia.org.	1952	IN	TXT	"v=DMARC1; p=quarantine; rua=mailto:dmarc-rua@wikimedia.org; ruf=mailto:dmarc-ruf@wikimedia.org;"
+```
 
 Resources:
 - [Wikipedia: DMARC](https://en.wikipedia.org/wiki/DMARC)
 - [What is a DNS DMARC record?](https://www.cloudflare.com/learning/dns/dns-records/dns-dmarc-record/)
+- [RFC 7489: DMARC](https://www.rfc-editor.org/rfc/rfc7489)

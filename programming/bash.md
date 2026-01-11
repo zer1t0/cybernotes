@@ -12,6 +12,16 @@ white
 EOF
 ```
 
+## Script options
+
+### Make bash script fail if any command fails
+
+```
+set -e
+```
+
+
+
 ## Loops
 
 ### While loop
@@ -54,3 +64,8 @@ The last two are specially useful in context of programs that invoke bash like g
 (echo "Hello"; cat -) | cat
 cat <(echo "Hello") - | cat
 ```
+
+
+## Resources
+
+- [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html)

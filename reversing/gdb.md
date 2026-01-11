@@ -395,6 +395,17 @@ pwndbg> stack
 07:0038│+038     0x7fffffffe058 —▸ 0x7ffff7def24a (__libc_start_call_main+122) ◂— mov edi, eax
 ```
 
+In case of using GEF, we can use the `dereference` command to print the stack
+with the references:
+```
+gef➤  dereference 5
+0xfffb4230│+0x0000: 0x00000000	 ← $sp
+0xfffb4234│+0x0004: 0x00000000
+0xfffb4238│+0x0008: 0x00010538  →  <_start+0> mov r11,  #0
+0xfffb423c│+0x000c: 0x00000000
+0xfffb4240│+0x0010: 0x00000000
+```
+
 ### Show the data type
 
 If we have debugging symbols available, we can see the type of a variable with the `ptype` command:
@@ -459,6 +470,16 @@ Mapped address spaces:
 	0xf7ffb000 0xf7ffd000     0x2000    0x31000  r--p   /usr/lib/i386-linux-gnu/ld-linux.so.2
 	0xf7ffd000 0xf7ffe000     0x1000    0x33000  rw-p   /usr/lib/i386-linux-gnu/ld-linux.so.2
 	0xfffdd000 0xffffe000    0x21000        0x0  rw-p   [stack]
+```
+
+### Write memory
+
+We can use the set command to write values in specific memory regions, but we
+need to provide a type.
+
+In order to write an string, we need to write it as an array of characters. For example:
+```
+set {char[10]}0xfffb4d0a = "Foobar"
 ```
 
 ### Registers

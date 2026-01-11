@@ -163,10 +163,9 @@ Access Token can be sent to the Resource Server to access to its
 resources.
 
 It is important to know that inside the Access Tokens, the
-Authorization Server includes inside the Access Tokens the scope cover
-so the Resource Server knows to which resources the Access Token
-grants access. This is mainly the reason why OAuth 2.0 is an
-authorization framework.
+Authorization Server includes the scope cover so the Resource Server knows to
+which resources the Access Token grants access. This is mainly the reason why
+OAuth 2.0 is an authorization framework.
 
 However, the format of the Access Token is not specified in the
 [OAuth RFC](https://datatracker.ietf.org/doc/html/rfc6749) (as many other stuff, which has led to [criticism](https://en.wikipedia.org/wiki/OAuth#Controversy)
@@ -203,7 +202,8 @@ the Authorization Server must publish two endpoints:
 - **Authorization endpoint**
 - **Token endpoint**
 
-On the other hand, since the Authorization Grants must be returned to Client via an redirection or similar method, the Client must also define one endpoint:
+On the other hand, since the Authorization Grants must be returned to Client via
+an redirection or similar method, the Client must also define one endpoint:
 
 - **Redirection Endpoint**
 

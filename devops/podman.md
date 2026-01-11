@@ -1,4 +1,6 @@
-# Podman
+# Docker / Podman
+
+Docker is well known containers tool.
 
 Podman is container management tool that shares the same API as Docker, so you
 can run any docker command by replacing `docker` by `podman`, but also allows
@@ -10,7 +12,16 @@ users to create containers without requiring root permissions.
 sudo apt install podman
 ```
 
-## Podman Usage
+## Usage
+
+### Remove all containers
+
+```
+docker rm $(docker ps -a -q)
+```
+
+- [Stop and remove all docker containers](https://stackoverflow.com/a/51316176)
+
 
 ### Run shell inside container
 
@@ -25,3 +36,20 @@ podman run -ti <image> /bin/bash
 ```
 
 - [How do I get into a Docker container's shell?](https://stackoverflow.com/a/30173220)
+
+
+### Stop all containers
+
+```
+docker stop $(docker ps -a -q)
+```
+
+- [Stop and remove all docker containers](https://stackoverflow.com/a/51316176)
+
+
+## Where are the volumes stored
+
+Volumes are folders under `/var/lib/docker/volumes/`
+```
+sudo ls -lah /var/lib/docker/volumes/
+```

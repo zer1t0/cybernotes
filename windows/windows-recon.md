@@ -1,6 +1,38 @@
 # Windows Recon
 
 
+## Hostname
+
+From registry, we can retrieve the computer name from the value `ComputerName`
+under the key `HKLM\System\CurrentControlSet\Control\ComputerName\ComputerName`.
+
+Here is an example with reg:
+```
+C:\>reg query HKLM\System\CurrentControlSet\Control\ComputerName\ComputerName /v ComputerName
+
+HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\ComputerName\ComputerName
+    ComputerName    REG_SZ    DESKTOP-123456
+```
+
+## Domain
+
+We can retrieve the domain of the current computer from registry, specifically
+from the `Domain` value under the
+`HKLM\System\CurrentControlSet\Services\Tcpip\Parameters` key.
+
+Here is an example with reg:
+```
+C:\>reg query "HKLM\System\CurrentControlSet\Services\Tcpip\Parameters" /v Domain
+
+HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Tcpip\Parameters
+    Domain    REG_SZ    hack.lab
+```
+
+Another option is to retrieve the current user domain from environment
+variables:
+- `USERDNSDOMAIN`: Current user domain in DNS format.
+- `USERDOMAIN`: Current user domain in NetBios format.
+
 ## Powershell history
 
 We can find the Powershell history for an user in:
